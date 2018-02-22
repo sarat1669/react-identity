@@ -1,0 +1,44 @@
+{
+  "name": "react-identity",
+  "version": "0.0.11",
+  "description": "Higher order components for authentication and authorization",
+  "main": "build/index.js",
+  "peerDependencies": {},
+  "dependencies": {
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "webpack": "^2.6.1"
+  },
+  "scripts": {
+    "start": "webpack --watch --progress",
+    "build": "webpack"
+  },
+  "author": {
+    "name": "Sarat Chandra Balla",
+    "email": "sarat1669@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:sarat1669/react-identity.git"
+  },
+  "bugs": {
+    "url": "http://github.com/sarat1669/react-identity/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-decorators": "^6.24.1",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.5.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1"
+  }
+}
