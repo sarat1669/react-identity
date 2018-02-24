@@ -1,14 +1,17 @@
 # react-identity
 
-Higher order components for authentication and authorization
+Higher order components for authorization in react
+
 
 ### Features
 - Plug and Play
 - Redux support
 
+
 ### Installation
 
 [![react-identity](https://nodei.co/npm/react-identity.png)](https://npmjs.org/package/react-identity)
+
 
 ### Usage
 
@@ -203,4 +206,4 @@ export default withUpdater()(withUser(SampleComponent))
 
 ### License
 
-`react-popped` is released under the MIT license.
+`react-identity` is released under the MIT license.
