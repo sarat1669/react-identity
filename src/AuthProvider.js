@@ -9,7 +9,8 @@ export default class AuthProvider extends Component {
 
   static childContextTypes = {
     user: PropTypes.object,
-    userUpdater: PropTypes.func.isRequired,
+    roleAccessor: PropTypes.func,
+    updater: PropTypes.func.isRequired,
     loggedOutRole: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.symbol
@@ -22,12 +23,16 @@ export default class AuthProvider extends Component {
 
   componentDidMount() {
     this.setState({ loggedOutRole: this.props.loggedOutRole })
-    this.props.updateUser(this.userUpdater)
+    this.props.updater && this.props.updater(this.userUpdater)
   }
 
   getChildContext() {
    let { user, loggedOutRole } = this.state
-   return { user, loggedOutRole, userUpdater: this.userUpdater }
+
+   return {
+     user, loggedOutRole, updater: this.userUpdater,
+     roleAccessor: this.props.roleAccessor
+   }
   }
 
   render() {

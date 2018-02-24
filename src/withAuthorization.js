@@ -6,6 +6,7 @@ function withAuthorization(authorizedRoles, configs={}) {
     return class ComponentWithAuthorization extends Component {
       static contextTypes = {
         user: PropTypes.object,
+        roleAccessor: PropTypes.func,
         loggedOutRole: PropTypes.oneOfType([
           PropTypes.string,
           PropTypes.symbol
@@ -14,14 +15,18 @@ function withAuthorization(authorizedRoles, configs={}) {
 
       render() {
         const { unauthorized } = configs
-        const { user, loggedOutRole } = this.context
+        const { user, loggedOutRole, roleAccessor } = this.context
+
 
         if(!user && loggedOutRole && authorizedRoles.includes(loggedOutRole)) {
           return <WrappableComponent {...this.props} />
         }
 
-        if(user && authorizedRoles.includes(user.role)) {
-          return <WrappableComponent { ...this.props } />
+        if(user) {
+          let userRole = roleAccessor ? roleAccessor(user) : user.role
+          if(authorizedRoles.includes(userRole)) {
+            return <WrappableComponent { ...this.props } />
+          }
         }
 
         if(unauthorized) {

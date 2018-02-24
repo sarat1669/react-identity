@@ -537,7 +537,7 @@ var AuthProvider = function (_Component) {
     key: 'componentDidMount',
     value: function componentDidMount() {
       this.setState({ loggedOutRole: this.props.loggedOutRole });
-      this.props.updateUser(this.userUpdater);
+      this.props.updater && this.props.updater(this.userUpdater);
     }
   }, {
     key: 'getChildContext',
@@ -546,7 +546,11 @@ var AuthProvider = function (_Component) {
           user = _state.user,
           loggedOutRole = _state.loggedOutRole;
 
-      return { user: user, loggedOutRole: loggedOutRole, userUpdater: this.userUpdater };
+
+      return {
+        user: user, loggedOutRole: loggedOutRole, updater: this.userUpdater,
+        roleAccessor: this.props.roleAccessor
+      };
     }
   }, {
     key: 'render',
@@ -560,7 +564,8 @@ var AuthProvider = function (_Component) {
 
 AuthProvider.childContextTypes = {
   user: _propTypes2.default.object,
-  userUpdater: _propTypes2.default.func.isRequired,
+  roleAccessor: _propTypes2.default.func,
+  updater: _propTypes2.default.func.isRequired,
   loggedOutRole: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.symbol])
 };
 exports.default = AuthProvider;
@@ -615,15 +620,19 @@ function withAuthorization(authorizedRoles) {
           var unauthorized = configs.unauthorized;
           var _context = this.context,
               user = _context.user,
-              loggedOutRole = _context.loggedOutRole;
+              loggedOutRole = _context.loggedOutRole,
+              roleAccessor = _context.roleAccessor;
 
 
           if (!user && loggedOutRole && authorizedRoles.includes(loggedOutRole)) {
             return _react2.default.createElement(WrappableComponent, this.props);
           }
 
-          if (user && authorizedRoles.includes(user.role)) {
-            return _react2.default.createElement(WrappableComponent, this.props);
+          if (user) {
+            var userRole = roleAccessor ? roleAccessor(user) : user.role;
+            if (authorizedRoles.includes(userRole)) {
+              return _react2.default.createElement(WrappableComponent, this.props);
+            }
           }
 
           if (unauthorized) {
@@ -637,6 +646,7 @@ function withAuthorization(authorizedRoles) {
       return ComponentWithAuthorization;
     }(_react.Component), _class.contextTypes = {
       user: _propTypes2.default.object,
+      roleAccessor: _propTypes2.default.func,
       loggedOutRole: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.symbol])
     }, _temp;
   };
@@ -646,6 +656,68 @@ exports.default = withAuthorization;
 
 /***/ }),
 /* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(1);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function withUpdater() {
+  return function passUpdaterTo(WrappableComponent) {
+    var _class, _temp;
+
+    return _temp = _class = function (_Component) {
+      _inherits(ComponentWithUpdater, _Component);
+
+      function ComponentWithUpdater() {
+        _classCallCheck(this, ComponentWithUpdater);
+
+        return _possibleConstructorReturn(this, (ComponentWithUpdater.__proto__ || Object.getPrototypeOf(ComponentWithUpdater)).apply(this, arguments));
+      }
+
+      _createClass(ComponentWithUpdater, [{
+        key: 'render',
+        value: function render() {
+          var updater = this.context.updater;
+
+          return _react2.default.createElement(WrappableComponent, _extends({ updater: updater }, this.props));
+        }
+      }]);
+
+      return ComponentWithUpdater;
+    }(_react.Component), _class.contextTypes = {
+      updater: _propTypes2.default.func.isRequired
+    }, _temp;
+  };
+}
+
+exports.default = withUpdater;
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -707,85 +779,23 @@ function withCurrentUser() {
 exports.default = withCurrentUser;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(1);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function withUpdater() {
-  return function passUpdaterTo(WrappableComponent) {
-    var _class, _temp;
-
-    return _temp = _class = function (_Component) {
-      _inherits(ComponentWithUpdater, _Component);
-
-      function ComponentWithUpdater() {
-        _classCallCheck(this, ComponentWithUpdater);
-
-        return _possibleConstructorReturn(this, (ComponentWithUpdater.__proto__ || Object.getPrototypeOf(ComponentWithUpdater)).apply(this, arguments));
-      }
-
-      _createClass(ComponentWithUpdater, [{
-        key: 'render',
-        value: function render() {
-          var userUpdater = this.context.userUpdater;
-
-          return _react2.default.createElement(WrappableComponent, _extends({ updater: userUpdater }, this.props));
-        }
-      }]);
-
-      return ComponentWithUpdater;
-    }(_react.Component), _class.contextTypes = {
-      userUpdater: _propTypes2.default.func.isRequired
-    }, _temp;
-  };
-}
-
-exports.default = withUpdater;
-
-/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _withUpdater = __webpack_require__(10);
+var _withUser = __webpack_require__(10);
+
+var _withUser2 = _interopRequireDefault(_withUser);
+
+var _withUpdater = __webpack_require__(9);
 
 var _withUpdater2 = _interopRequireDefault(_withUpdater);
 
 var _AuthProvider = __webpack_require__(7);
 
 var _AuthProvider2 = _interopRequireDefault(_AuthProvider);
-
-var _withCurrentUser = __webpack_require__(9);
-
-var _withCurrentUser2 = _interopRequireDefault(_withCurrentUser);
 
 var _withAuthorization = __webpack_require__(8);
 
@@ -794,7 +804,7 @@ var _withAuthorization2 = _interopRequireDefault(_withAuthorization);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
-  AuthProvider: _AuthProvider2.default, withCurrentUser: _withCurrentUser2.default, withAuthorization: _withAuthorization2.default, withUpdater: _withUpdater2.default
+  AuthProvider: _AuthProvider2.default, withUser: _withUser2.default, withAuthorization: _withAuthorization2.default, withUpdater: _withUpdater2.default
 };
 
 /***/ }),
