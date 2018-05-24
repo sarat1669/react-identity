@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
-function withAuthorization(authorizedRoles, configs={}) {
+function withAuthorization(requirements, configs={}) {
   return function applyAuthFor(WrappableComponent) {
     return class ComponentWithAuthorization extends Component {
       static contextTypes = {
-        user: PropTypes.object,
-        roleAccessor: PropTypes.func,
+        authData: PropTypes.object,
+        authorize: PropTypes.func,
         loggedOutRole: PropTypes.oneOfType([
           PropTypes.string,
           PropTypes.symbol
@@ -15,18 +15,15 @@ function withAuthorization(authorizedRoles, configs={}) {
 
       render() {
         const { unauthorized } = configs
-        const { user, loggedOutRole, roleAccessor } = this.context
+        const { authData, authorize } = this.context
 
 
-        if(!user && loggedOutRole && authorizedRoles.includes(loggedOutRole)) {
+        if(!authData && configs.inverseAuth) {
           return <WrappableComponent {...this.props} />
         }
 
-        if(user) {
-          let userRole = roleAccessor ? roleAccessor(user) : user.role
-          if(authorizedRoles.includes(userRole)) {
-            return <WrappableComponent { ...this.props } />
-          }
+        if(authData && authorize(requirements, authData)) {
+          return <WrappableComponent { ...this.props } />
         }
 
         if(unauthorized) {

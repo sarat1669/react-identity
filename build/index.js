@@ -503,8 +503,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _react = __webpack_require__(2);
 
-var _react2 = _interopRequireDefault(_react);
-
 var _propTypes = __webpack_require__(1);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
@@ -525,8 +523,8 @@ var AuthProvider = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (AuthProvider.__proto__ || Object.getPrototypeOf(AuthProvider)).call(this, props));
 
-    _this.userUpdater = function (user) {
-      _this.setState({ user: user });
+    _this.authDataUpdater = function (authData) {
+      _this.setState({ authData: authData });
     };
 
     _this.state = {};
@@ -536,20 +534,18 @@ var AuthProvider = function (_Component) {
   _createClass(AuthProvider, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      this.setState({ loggedOutRole: this.props.loggedOutRole });
-      this.props.updater && this.props.updater(this.userUpdater);
+      this.setState({ authData: this.props.authData });
+      this.props.updater && this.props.updater(this.authDataUpdater);
     }
   }, {
     key: 'getChildContext',
     value: function getChildContext() {
-      var _state = this.state,
-          user = _state.user,
-          loggedOutRole = _state.loggedOutRole;
+      var authData = this.state.authData;
+      var authorize = this.props.authorize;
 
 
       return {
-        user: user, loggedOutRole: loggedOutRole, updater: this.userUpdater,
-        roleAccessor: this.props.roleAccessor
+        authData: authData, updater: this.authDataUpdater, authorize: authorize
       };
     }
   }, {
@@ -563,15 +559,84 @@ var AuthProvider = function (_Component) {
 }(_react.Component);
 
 AuthProvider.childContextTypes = {
-  user: _propTypes2.default.object,
-  roleAccessor: _propTypes2.default.func,
-  updater: _propTypes2.default.func.isRequired,
-  loggedOutRole: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.symbol])
+  authorize: _propTypes2.default.func,
+  authData: _propTypes2.default.object,
+  updater: _propTypes2.default.func.isRequired
 };
 exports.default = AuthProvider;
 
+
+AuthProvider.propTypes = {
+  updater: _propTypes2.default.func,
+  children: _propTypes2.default.node,
+  authData: _propTypes2.default.object,
+  authorize: _propTypes2.default.func.isRequired
+};
+
 /***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(1);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function withAuthData() {
+  return function passAuthDataTo(WrappableComponent) {
+    var _class, _temp;
+
+    return _temp = _class = function (_Component) {
+      _inherits(ComponentWithAuthData, _Component);
+
+      function ComponentWithAuthData() {
+        _classCallCheck(this, ComponentWithAuthData);
+
+        return _possibleConstructorReturn(this, (ComponentWithAuthData.__proto__ || Object.getPrototypeOf(ComponentWithAuthData)).apply(this, arguments));
+      }
+
+      _createClass(ComponentWithAuthData, [{
+        key: 'render',
+        value: function render() {
+          var authData = this.context.authData;
+
+          return _react2.default.createElement(WrappableComponent, _extends({ authData: authData }, this.props));
+        }
+      }]);
+
+      return ComponentWithAuthData;
+    }(_react.Component), _class.contextTypes = {
+      authData: _propTypes2.default.object
+    }, _temp;
+  };
+}
+
+exports.default = withAuthData;
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -599,7 +664,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function withAuthorization(authorizedRoles) {
+function withAuthorization(requirements) {
   var configs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
   return function applyAuthFor(WrappableComponent) {
@@ -619,20 +684,20 @@ function withAuthorization(authorizedRoles) {
         value: function render() {
           var unauthorized = configs.unauthorized;
           var _context = this.context,
-              user = _context.user,
-              loggedOutRole = _context.loggedOutRole,
-              roleAccessor = _context.roleAccessor;
+              authData = _context.authData,
+              authorize = _context.authorize;
 
 
-          if (!user && loggedOutRole && authorizedRoles.includes(loggedOutRole)) {
+          if (!authData && configs.inverseAuth) {
             return _react2.default.createElement(WrappableComponent, this.props);
           }
 
-          if (user) {
-            var userRole = roleAccessor ? roleAccessor(user) : user.role;
-            if (authorizedRoles.includes(userRole)) {
+          if (authData) {
+            if (authorize(requirements, authData)) {
               return _react2.default.createElement(WrappableComponent, this.props);
             }
+          } else if (configs.inverseAuth) {
+            return _react2.default.createElement(WrappableComponent, this.props);
           }
 
           if (unauthorized) {
@@ -645,8 +710,8 @@ function withAuthorization(authorizedRoles) {
 
       return ComponentWithAuthorization;
     }(_react.Component), _class.contextTypes = {
-      user: _propTypes2.default.object,
-      roleAccessor: _propTypes2.default.func,
+      authData: _propTypes2.default.object,
+      authorize: _propTypes2.default.func,
       loggedOutRole: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.symbol])
     }, _temp;
   };
@@ -655,7 +720,7 @@ function withAuthorization(authorizedRoles) {
 exports.default = withAuthorization;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -717,79 +782,13 @@ function withUpdater() {
 exports.default = withUpdater;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(1);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function withCurrentUser() {
-  return function passUserTo(WrappableComponent) {
-    var _class, _temp;
-
-    return _temp = _class = function (_Component) {
-      _inherits(ComponentWithCurrentUser, _Component);
-
-      function ComponentWithCurrentUser() {
-        _classCallCheck(this, ComponentWithCurrentUser);
-
-        return _possibleConstructorReturn(this, (ComponentWithCurrentUser.__proto__ || Object.getPrototypeOf(ComponentWithCurrentUser)).apply(this, arguments));
-      }
-
-      _createClass(ComponentWithCurrentUser, [{
-        key: 'render',
-        value: function render() {
-          var user = this.context.user;
-
-          return _react2.default.createElement(WrappableComponent, _extends({ user: user }, this.props));
-        }
-      }]);
-
-      return ComponentWithCurrentUser;
-    }(_react.Component), _class.contextTypes = {
-      user: _propTypes2.default.object
-    }, _temp;
-  };
-}
-
-exports.default = withCurrentUser;
-
-/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _withUser = __webpack_require__(10);
-
-var _withUser2 = _interopRequireDefault(_withUser);
-
-var _withUpdater = __webpack_require__(9);
+var _withUpdater = __webpack_require__(10);
 
 var _withUpdater2 = _interopRequireDefault(_withUpdater);
 
@@ -797,14 +796,18 @@ var _AuthProvider = __webpack_require__(7);
 
 var _AuthProvider2 = _interopRequireDefault(_AuthProvider);
 
-var _withAuthorization = __webpack_require__(8);
+var _withAuthData = __webpack_require__(8);
+
+var _withAuthData2 = _interopRequireDefault(_withAuthData);
+
+var _withAuthorization = __webpack_require__(9);
 
 var _withAuthorization2 = _interopRequireDefault(_withAuthorization);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
-  AuthProvider: _AuthProvider2.default, withUser: _withUser2.default, withAuthorization: _withAuthorization2.default, withUpdater: _withUpdater2.default
+  AuthProvider: _AuthProvider2.default, withAuthData: _withAuthData2.default, withAuthorization: _withAuthorization2.default, withUpdater: _withUpdater2.default
 };
 
 /***/ }),

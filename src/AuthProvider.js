@@ -1,41 +1,44 @@
-import React, { Component, Children } from 'react'
+import { Component } from 'react'
 import PropTypes from 'prop-types'
 
 export default class AuthProvider extends Component {
-  constructor(props) {
-    super(props)
+  constructor() {
+    super()
     this.state = {}
   }
 
   static childContextTypes = {
-    user: PropTypes.object,
-    roleAccessor: PropTypes.func,
-    updater: PropTypes.func.isRequired,
-    loggedOutRole: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.symbol
-    ])
+    authorize: PropTypes.func,
+    authData: PropTypes.object,
+    updater: PropTypes.func.isRequired
   }
 
-  userUpdater = (user) => {
-    this.setState({ user })
+  authDataUpdater = (authData) => {
+    this.setState({ authData })
   }
 
   componentDidMount() {
-    this.setState({ loggedOutRole: this.props.loggedOutRole })
-    this.props.updater && this.props.updater(this.userUpdater)
+    this.setState({ authData: this.props.authData })
+    this.props.updater && this.props.updater(this.authDataUpdater)
   }
 
   getChildContext() {
-   let { user, loggedOutRole } = this.state
+    let { authData } = this.state
+    let { authorize } = this.props
 
-   return {
-     user, loggedOutRole, updater: this.userUpdater,
-     roleAccessor: this.props.roleAccessor
-   }
+    return {
+      authData, updater: this.authDataUpdater, authorize
+    }
   }
 
   render() {
     return this.props.children
   }
+}
+
+AuthProvider.propTypes = {
+  updater: PropTypes.func,
+  children: PropTypes.node,
+  authData: PropTypes.object,
+  authorize: PropTypes.func.isRequired,
 }

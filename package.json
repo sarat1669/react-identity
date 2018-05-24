@@ -1,6 +1,6 @@
 {
   "name": "react-identity",
-  "version": "0.0.18",
+  "version": "0.2.0",
   "description": "Higher order components for authorization",
   "main": "build/index.js",
   "peerDependencies": {
@@ -10,9 +10,11 @@
     "prop-types": "^15.6.0"
   },
   "scripts": {
-    "start": "webpack --watch --progress",
-    "build": "webpack",
-    "prepublish": "npm run build"
+    "start": "webpack --watch --progress ./webpack.config.js",
+    "build": "webpack ./webpack.config.js",
+    "test": "node_modules/.bin/_mocha test/helpers/browser.js -- test/*.spec.js",
+    "cover": "node_modules/.bin/babel-node node_modules/.bin/babel-istanbul cover node_modules/.bin/_mocha test/helpers/browser.js -- test/*.spec.js",
+    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls"
   },
   "author": {
     "name": "Sarat Chandra Balla",
@@ -29,6 +31,8 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
+    "babel-eslint": "^8.2.3",
+    "babel-istanbul": "^0.12.2",
     "babel-loader": "^7.0.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-decorators": "^6.24.1",
@@ -41,6 +45,17 @@
     "babel-preset-es2017": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "eslint": "^4.19.1",
+    "eslint-loader": "^2.0.0",
+    "eslint-plugin-react": "^7.8.2",
+    "expect": "^22.4.3",
+    "jsdom": "^11.11.0",
+    "mocha": "^5.2.0",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "sinon": "^5.0.10",
     "webpack": "^2.6.1"
   }
 }

@@ -1,4 +1,5 @@
-var path = require('path');
+var path = require('path')
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -18,6 +19,12 @@ module.exports = {
             presets: ['env', 'es2015', 'es2017', 'stage-0']
           }
         }
+      },
+      {
+        test: /\.(js|jsx)$/,
+        include: path.resolve('src'),
+        loader: 'eslint-loader',
+        options: { }
       }
     ]
   },
