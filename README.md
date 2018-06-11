@@ -1,82 +1,45 @@
 # react-identity
+Higher order components for composing authorization into react apps
 
-Higher order components for authorization in react
-
+---
+![Build Status](https://travis-ci.org/sarat1669/react-identity.svg?branch=master) [![Coverage Status](https://coveralls.io/repos/github/sarat1669/react-identity/badge.svg?branch=master)](https://coveralls.io/github/sarat1669/react-identity?branch=master)
 
 ### Features
-- Plug and Play
-- Redux support
-
+- Integrates with your existing components seamlessly
+- Works with redux and other stores
 
 ### Installation
 
-[![react-identity](https://nodei.co/npm/react-identity.png)](https://npmjs.org/package/react-identity)
+Using npm:
+```
+npm install react-identity
+```
 
+Importing:
+```
+// Using ES6 transpiler
+import ReactIdentity from 'react-identity'
 
+// Or else
+const ReactIdentity = require('react-identity')
+```
 ### Usage
 
-#### Configuring the provider
+`react-identity` provides `withAuthorization` HOC for composing authorization
 
-A static user can be passed directly to the provider as an user object. By default the role of the user is read from `user.role`
-
+##### Example component:
 ```js
-import React, { Component } from 'react'
-import { render } from 'react-dom'
-import { AuthProvider } from 'react-identity'
-
-import App from './components/App'
-
-let user = {
-  name: 'test',
-  role: 'Admin'
+class ExampleComponent extends Component {
+  render() {
+    return (<div>{this.props.user.name}</div>)
+  }
 }
-
-render(
-  <AuthProvider user={user}>
-    <App />
-  </AuthProvider>
-, document.getElementById('app'))
-
 ```
+Lets see how we can add authorization to this component
 
+#### withAuthorization HOC
 
-#### Configuring provider for redux
-
-If the user data is stored in the redux, updates to the store can be subscribed by passing the `updater` function
-
-```js
-import React, { Component } from 'react'
-import { render } from 'react-dom'
-import { createStore } from 'redux'
-import { AuthProvider } from 'react-identity'
-import { Provider as ReduxProvider } from 'react-redux'
-
-import reducers from './reducers'
-import App from './components/App'
-
-const store = createStore(reducers)
-
-let updater = (setUser) => {
-  // set the user initially
-  setUser(store.getState().user)
-  // subscribe to updates on the store to update the user
-  store.subscribe(() => setUser(store.getState().user))
-}
-
-render(
-  <ReduxProvider>
-    <AuthProvider user={user}>
-      <App />
-    </AuthProvider>
-  </ReduxProvider>
-, document.getElementById('app'))
-
-```
-
-
-#### Authorization
-
-Here comes the actual part. In order to show the component only to users with specific roles, you can use the `withAuthorization` with the accepted roles
+`withAuthorization` takes a config which in this case is [ 'admin', 'moderator' ] which is later used by the `authorize` function to check if the component can be rendered.
 
 ```js
 import React, { Component } from 'react'
@@ -91,10 +54,122 @@ class SampleComponent extends Component {
 export default withAuthorization(['admin', 'moderator'])(SampleComponent)
 ```
 
+In order for this to work, we need to configure `AuthProvider` with the `authorize` function
 
-#### Render custom content for unauthorized users
+#### AuthProvider
 
-If you want to render a custom component for unauthorized users, you can pass a react element to the `withAuthorization`
+`AuthProvider` maintains the `authData` state and `authorize` function in its state and is passed as childContext, and the same is utilized by the `withAuthorization` HOC.
+
+`authorize` function receives the requirements passed by the `withAuthorization` and `userData` from the state. The implementation of authorize function is left for the user.
+
+```js
+import React, { Component } from 'react'
+import { render } from 'react-dom'
+import { AuthProvider } from 'react-identity'
+
+import App from './components/App'
+
+let authorize = (requirements, authData) => {
+  let userRole = authData.user.role
+  return requirements.some((role) => (role == userRole))
+}
+
+render(
+    <AuthProvider authorize={authorize}>
+        <App />
+    </AuthProvider>
+, document.getElementById('app'))
+```
+
+We have now setup the `AuthProvider` and `withAuthorization` but the `userData` is not yet present in the `AuthProvider`. `authData` can be directly sent as a prop to the `AuthProvider`, but for most cases this won't suffice, as `authData` needs to be dynamic and can be updated at any point of time. So, `updater` function can be used to update the `authData` at any point of time. This can be provided as a prop to the `AuthProvider` or can be accessed within the components using `withUpdater` HOC.
+
+##### Implementing the updater function:
+
+```js
+import React, { Component } from 'react'
+import { render } from 'react-dom'
+import { AuthProvider } from 'react-identity'
+
+import App from './components/App'
+
+let authorize = (requirements, authData) => {
+  let userRole = authData.user.role
+  return requirements.some((role) => (role == userRole))
+}
+
+let updater = (setAuthData) => {
+  let authData = { name: 'Sample User', role: 'admin' }
+  setAuthData(authData)
+}
+
+render(
+    <AuthProvider authorize={authorize} updater={updater}>
+        <App />
+    </AuthProvider>
+, document.getElementById('app'))
+```
+
+#### withUpdater HOC
+
+```js
+import React, { Component } from 'react'
+import { withUpdater } from 'react-identity'
+
+class SampleComponent extends Component {
+    handleOnClick = () => {
+        let authData = { user: { name: 'Sid', role: 'moderator' } }
+        this.props.updater(authData)
+    }
+
+    render() {
+        return (
+            <div>
+                Sample Component
+                <input type="button" value="Change user to Sid" onClick={this.handleOnClick} />
+            </div>
+        )
+    }
+}
+
+export default withUpdater()(SampleComponent)
+```
+
+#### Configuring updater for redux
+
+If the `authData` is stored in the redux, updates to the store can be subscribed by passing the `updater` function to the `AuthProvider` as follows
+
+```js
+import React, { Component } from 'react'
+import { render } from 'react-dom'
+import { createStore } from 'redux'
+import { AuthProvider } from 'react-identity'
+import { Provider as ReduxProvider } from 'react-redux'
+
+import reducers from './reducers'
+import App from './components/App'
+
+const store = createStore(reducers)
+
+let updater = (setAuthData) => {
+  // set the authData initially
+  setAuthData(store.getState().authData)
+  // subscribe to updates on the store to update the authData
+  store.subscribe(() => setAuthData(store.getState().authData))
+}
+
+render(
+    <ReduxProvider>
+        <AuthProvider updater={updater}>
+            <App />
+        </AuthProvider>
+    </ReduxProvider>
+, document.getElementById('app'))
+
+```
+
+#### Rendering custom Component for unauthorized users
+
+If you want to render a custom component for unauthorized users, you can pass a react element to the `withAuthorization`'s config as follows
 
 ```js
 import React, { Component } from 'react'
@@ -102,28 +177,31 @@ import { withAuthorization } from 'react-identity'
 
 class SampleComponent extends Component {
   render() {
-    return (
-      ...
-    )
+    return (<div>SampleComponent</div>)
   }
 }
 
-export default withAuthorization(['admin', 'moderator'], { unauthorized: (<div>403</div>) })(SampleComponent)
+export default withAuthorization([ 'admin', 'moderator' ], { unauthorized: (<div>403</div>) })(SampleComponent)
 ```
 
-
-#### Making component visible only to logged out users
-
-Well, what if we want to render a component to a logged out user (i.e, user == null)
-In that case, you can define a role for logged out user as a prop to the `AuthProvider` and that role can be used with `withAuthorization` to render the component only to logged out user
+#### Accessing authData from components
+The `authData` which is passed to the `AuthProvider` can be accessed via react context. We also provide a decorator `withAuthData`
 
 ```js
-<AuthProvider updateUser={updateUser} loggedOutRole={'loggedOutUser'}>
- ...
-</AuthProvider>
+import React, { Component } from 'react'
+import { withAuthData } from 'react-identity'
+
+class SampleComponent extends Component {
+  render() {
+    return (<div>{this.props.authData.user.name}</div>)
+  }
+}
+
+export default withAuthData()(SampleComponent)
 ```
 
-The `loggedOutUser` can be used along with other roles. And all other configs apply to this role as well
+#### Rendering components only when unauthorized
+When a component needs to be rendered only when unauthorized, `inverseAuth` config can be sent to the `withAuthorization`
 
 ```js
 import React, { Component } from 'react'
@@ -131,78 +209,12 @@ import { withAuthorization } from 'react-identity'
 
 class SampleComponent extends Component {
   render() {
-    return (
-      ...
-    )
+    return (<div>SampleComponent</div>)
   }
 }
 
-export default withAuthorization(['loggedOutUser'])(SampleComponent)
+export default withAuthorization([], { inverseAuth: true })
 ```
-
-
-#### Custom role accessor
-By default the user role is retrived from `user.role`, but this may not be the case. You can pass a `roleAccessor` function to the `AuthProvider` as a function which receives the user object and returns the role
-
-```js
-<AuthProvider roleAccessor={(user) => (user.current_role)}>
- ...
-</AuthProvider>
-```
-
-
-#### Accessing user from components
-The user object which is passed to the AuthProvider can be accessed via react context. We also provide a decorator `withUser`
-
-```js
-import React, { Component } from 'react'
-import { withUser } from 'react-identity'
-
-class SampleComponent extends Component {
-  render() {
-    return this.props.user.name
-  }
-}
-
-export default withUser()(SampleComponent)
-```
-
-
-#### Updating the user
-Incase you want to update the user details, you can use the `withUpdater` decorator which passes the updater function
-
-```js
-import React, { Component } from 'react'
-import { withUser, withUpdater } from 'react-identity'
-
-class SampleComponent extends Component {
-  handleOnClick = () => {
-    let user = { ...this.props.user, name: 'Sid' }
-    this.props.updater(user)
-  }
-
-  render() {
-    return (
-      <div>
-        {this.props.user.name}
-        <input
-          type="button"
-          value="Change name to Sid"
-          onClick={this.handleOnClick.bind(this, 'Sid')}
-        />
-      </div>
-    )
-  }
-}
-
-export default withUpdater()(withUser(SampleComponent))
-```
-
-
-### For more examples
-
-[Visit our project page](https://sarat1669.github.io/react-identity/)
-
 
 ### License
 
