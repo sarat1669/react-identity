@@ -1,6 +1,6 @@
 {
   "name": "react-identity",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Higher order components for authorization",
   "main": "build/index.js",
   "peerDependencies": {
@@ -10,7 +10,7 @@
     "prop-types": "^15.6.0"
   },
   "scripts": {
-    "start": "webpack --watch --progress ./webpack.config.js",
+    "start": "webpack --watch --progress --config ./webpack.config.js",
     "build": "webpack ./webpack.config.js",
     "test": "node_modules/.bin/_mocha test/helpers/browser.js -- test/*.spec.js",
     "cover": "node_modules/.bin/babel-node node_modules/.bin/babel-istanbul cover node_modules/.bin/_mocha test/helpers/browser.js -- test/*.spec.js",
