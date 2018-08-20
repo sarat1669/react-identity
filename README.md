@@ -167,9 +167,24 @@ render(
 
 ```
 
+#### Rendering custom Element for unauthorized users
+
+If you want to render a custom element for unauthorized users, you can pass a react element to the `withAuthorization`'s config as follows
+
+```js
+import React, { Component } from 'react'
+import { withAuthorization } from 'react-identity'
+
+class SampleComponent extends Component {
+  render() {
+    return (<div>SampleComponent</div>)
+  }
+}
+```
+
 #### Rendering custom Component for unauthorized users
 
-If you want to render a custom component for unauthorized users, you can pass a react element to the `withAuthorization`'s config as follows
+If you want to render a custom component for unauthorized users, you can pass a component to the `withAuthorization`'s config as follows
 
 ```js
 import React, { Component } from 'react'
@@ -181,7 +196,13 @@ class SampleComponent extends Component {
   }
 }
 
-export default withAuthorization([ 'admin', 'moderator' ], { unauthorized: (<div>403</div>) })(SampleComponent)
+class SampleUnauthorizedComponent extends Component {
+  render() {
+    return (<div>SampleUnauthorizedComponent</div>)
+  }
+}
+
+export default withAuthorization([ 'admin', 'moderator' ], { UnauthorizedComponent: SampleUnauthorizedComponent })(SampleComponent)
 ```
 
 #### Accessing authData from components

@@ -14,7 +14,7 @@ function withAuthorization(requirements, configs={}) {
       }
 
       render() {
-        const { unauthorized } = configs
+        const { unauthorized, UnauthorizedComponent } = configs
         const { authData, authorize } = this.context
 
 
@@ -28,6 +28,10 @@ function withAuthorization(requirements, configs={}) {
 
         if(unauthorized) {
           return unauthorized
+        }
+
+        if(UnauthorizedComponent) {
+          return <UnauthorizedComponent {...this.props} />
         }
 
         return null

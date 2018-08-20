@@ -74,12 +74,31 @@ describe('withAuthorization', function() {
     expect(wrapper.find(WrappableComponent).length).toEqual(1)
   })
 
-  it('should render custom component when unauthorized and unauthorized component is configured', function() {
+  it('should render custom element when unauthorized and unauthorized component is configured', function() {
     let Unauthorized = function() {
-      return "unauthorized"
+      return 'unauthorized'
     }
 
     let WrappedComponent = withAuthorization(['unauthorized-role'], { unauthorized: <Unauthorized /> })(
+      withUpdater()(withAuthData()(WrappableComponent))
+    )
+
+    let wrapper = mount(
+      <AuthProvider authData={authData} authorize={authorize}>
+        <WrappedComponent />
+      </AuthProvider>
+    )
+
+    expect(wrapper.find(Unauthorized).length).toEqual(1)
+    expect(wrapper.find(WrappableComponent).length).toEqual(0)
+  })
+
+  it('should render custom component when unauthorized and unauthorized component is configured', function() {
+    let Unauthorized = function() {
+      return 'unauthorized'
+    }
+
+    let WrappedComponent = withAuthorization(['unauthorized-role'], { UnauthorizedComponent: Unauthorized })(
       withUpdater()(withAuthData()(WrappableComponent))
     )
 

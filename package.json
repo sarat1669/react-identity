@@ -1,6 +1,6 @@
 {
   "name": "react-identity",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Higher order components for authorization",
   "main": "build/index.js",
   "peerDependencies": {
